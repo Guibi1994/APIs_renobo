@@ -5,10 +5,12 @@ library(ggplot2)
 library(sf)
 library(stringr)
 library(patchwork)
+library(googledrive)
+library(googlesheets4)
 options(scipen = 100)
 
 
-# 1. Catalaogo de datos espaciales (local)
+# 1. Catalaogo de datos espaciales (local) ----
 gdb_path <- "F:\\1. Datos Generales/2. Datos Base.gdb/"
 # gdb_list <- st_layers(gdb_path)
 
@@ -54,10 +56,10 @@ renovo_scale = c("#006A68","#90CCCB","#d1ce84","#D89A7E","#e36477","#EC3434")
 renovo_base = c("#C4DCE2","#D2DAA6", "#F1F1F1")
 
 
-# 3. Funciones espciales complementarias
+# 3. Funciones espaciales complementarias ----
 
 
-## 3.1. Re-aumentado de marco
+## 3.1. Re-aumentado de marco ----
 nst_bbox <- function(st, aumento_p) {
   # sacar coordenadas límite
   my_box = st_bbox(st)
@@ -76,7 +78,7 @@ nst_bbox <- function(st, aumento_p) {
   
 }
 
-## 3.2. Ranguas cuantílicos
+## 3.2. Ranguas cuantílicos ----
 qranks <- function(var, n = 5, include_cero = T) {
   
   # Si no incluye "0" hacer "0" como una categoria aparte
@@ -120,25 +122,16 @@ qranks <- function(var, n = 5, include_cero = T) {
 }
 
 
-# 4. Funciones cartográficas
+# 4. Funciones cartográficas ----
 
-## 4.1. Generar el mapa base
+## 4.1. Generar el mapa base ----
 gen_base_map <- function(box) {
   # a. Cargar información base
-  b01_rios <- st_read("0_raw_data/1_geo_data/CuerpoAgua.shp") %>%
-    st_make_valid() %>% 
-    st_transform(crs = 4326) %>% 
-    st_set_crs(4326) %>% 
+  b01_rios <- readRDS("../0_raw_data/2_rds_geo_data/cuerpos_hidricos.RDS") %>%
     st_intersection(box)
-  b02_parques <- st_read("0_raw_data/1_geo_data/parques.shp") %>%
-    st_make_valid() %>% 
-    st_transform(crs = 4326) %>% 
-    st_set_crs(4326) %>% 
+  b02_parques <- readRDS("../0_raw_data/2_rds_geo_data/parques.RDS") %>%
     st_intersection(box)
-  b03_manzanas <- st_read("0_raw_data/1_geo_data/ManzanaEstratificacion.shp") %>%
-    st_make_valid() %>% 
-    st_transform(crs = 4326) %>% 
-    st_set_crs(4326) %>% 
+  b03_manzanas <- readRDS("../0_raw_data/2_rds_geo_data/manzanas.RDS") %>%
     st_intersection(box)
   # b. crear mapa base
   my_basemap <- ggplot()+
@@ -151,6 +144,28 @@ gen_base_map <- function(box) {
   
 }
 
+# 5. Funciones complementarias ----
+## 5.1. Salvar gráficas en drive ----
+ggdrive_save <- function(
+    plot,
+    drive_location,
+    name,w =5,h=5) {
+  # Description: This funtion exports an image to drive
+  
+  # a. Local saving
+  ggplot2::ggsave(
+    plot = plot,
+    filename = name,
+    width = w,
+    height = h)
+  # b. Drive saving
+  googledrive::drive_upload(
+    media = name,
+    path = paste0(drive_location,"/",name),
+    overwrite = T)
+  # c. Removign local file
+  file.remove(name)
+}
 
 
 
