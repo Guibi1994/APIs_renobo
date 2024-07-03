@@ -11,7 +11,7 @@
 ## 0.1. Hiperparámetos ----
 source("2_1_api_diagnosticos_urbanos/utils.R")
 AE_dir = "../0_raw_data/3_ejemplo_api/ejemplo_api.kml"
-AE_nombre = "Proyecto elefante"
+AE_nombre = "Proyecto X"
 folder_name = "DEMO_api"
 
 ## 0.2. Construcción de entorno ----
