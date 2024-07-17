@@ -29,6 +29,60 @@ b03_manzanas <- st_read("0_raw_data/1_geo_data/ManzanaEstratificacion.shp") %>%
   st_set_crs(4326)
 saveRDS(b03_manzanas,"0_raw_data/2_rds_geo_data/manzanas.RDS")
 
+## 1.4. Estaciones Metro 
+b04_estaciones_metro <- st_read("..\\0_raw_data/1_geo_data/ESTACIONES_METRO_PUNTO.shp") %>% 
+  st_make_valid() %>% 
+  st_make_valid() %>% 
+  st_transform(crs = 4326) %>% 
+  st_set_crs(4326)
+b04_estaciones_metro$icon = "..\\0_raw_data/4_iconos/metro_bogota.PNG"
+saveRDS(b04_estaciones_metro,"..\\0_raw_data/2_rds_geo_data/estaciones_metro.RDS")
+
+## 1.5. Red Metro
+b05_red_metro <- st_read("..\\0_raw_data/1_geo_data/LINEAS_METRO.shp") %>% 
+  st_make_valid() %>% 
+  st_make_valid() %>% 
+  st_transform(crs = 4326) %>% 
+  st_set_crs(4326)
+saveRDS(b05_red_metro,"..\\0_raw_data/2_rds_geo_data/red_metro.RDS")
+
+## 1.6. Estaciones Regiotram
+b06_estaciones_regiotram <- st_read("..\\0_raw_data/1_geo_data/ESTACIONES_REGIOTRAM.shp") %>%
+  st_make_valid() %>% 
+  st_make_valid() %>% 
+  st_transform(crs = 4326) %>% 
+  st_set_crs(4326)
+b06_estaciones_regiotram$icon = "..\\0_raw_data/4_iconos/regio_tram.png"
+saveRDS(b06_estaciones_regiotram,"..\\0_raw_data/2_rds_geo_data/estaciones_regiotram.RDS")
+
+## 1.7. Red Regiotram 
+b07_red_regiotram <- st_read("..\\0_raw_data/1_geo_data/RED_REGIOTRAM.shp") %>% 
+  st_make_valid() %>% 
+  st_make_valid() %>% 
+  st_transform(crs = 4326) %>% 
+  st_set_crs(4326)
+saveRDS(b07_red_regiotram,"..\\0_raw_data/2_rds_geo_data/red_regiotram.RDS")
+
+## 1.8. Estaciones Transmilenio
+b08_estaciones_tm <- st_read("..\\0_raw_data/1_geo_data/ESTACIONES_TM.shp") %>% 
+  st_make_valid() %>% 
+  st_make_valid() %>% 
+  st_transform(crs = 4326) %>% 
+  st_set_crs(4326)
+
+b08_estaciones_tm$icon = "..\\0_raw_data/4_iconos/transmilenio.png"
+saveRDS(b08_estaciones_tm,"..\\0_raw_data/2_rds_geo_data/estaciones_tm.RDS")
+
+## 1.9. Red Transmilenio
+b09_red_tm <- st_read("..\\0_raw_data/1_geo_data/TRONCALES_TM.shp") %>% 
+  st_make_valid() %>% 
+  st_make_valid() %>% 
+  st_transform(crs = 4326) %>% 
+  st_set_crs(4326)
+saveRDS(b09_red_tm,"..\\0_raw_data/2_rds_geo_data/red_tm.RDS")
+
+
+
 
 
 
@@ -38,12 +92,16 @@ saveRDS(b03_manzanas,"0_raw_data/2_rds_geo_data/manzanas.RDS")
 a1_sisben_city <- read.delim2("../0_raw_data/s4_31marzo.txt", sep = ";") %>% 
   mutate(lon = as.numeric(coord_x_auto_rec),
          lat = as.numeric(coord_y_auto_rec)) %>%  
-  filter(!is.na(lon),!is.na(lat)) %>% 
+  filter(!is.na(lon),!is.na(lat)) #%>% 
   st_as_sf(coords = c("lon","lat"),crs = 4326) %>% 
   st_make_valid() %>%
   st_transform(crs = 4326) %>% 
   st_set_crs(4326)
 saveRDS(a1_sisben_city,"../0_raw_data/2_rds_geo_data/sisben.RDS")
+
+write.csv(a1_sisben_city, "..\\0_raw_data/1_geo_data/sisben_curado.csv",
+          row.names = F)
+
 
 
 ## 2.2. estratos ----

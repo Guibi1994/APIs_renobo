@@ -68,12 +68,13 @@ nst_bbox <- function(st, aumento_p) {
   x = (my_box[3]-my_box[1])*aumento_p
   y = (my_box[4]-my_box[2])*aumento_p
   
-  my_box[1] = my_box[1]-(x*3) # Añadido por formato integrado de renobo
+  my_box[1] = my_box[1]-x #(x*3) # Añadido por formato integrado de renobo
   my_box[3] = my_box[3]+x
   my_box[2] = my_box[2]-y
   my_box[4] = my_box[4]+y
   
   # Devlorver el marco reaumentado
+  my_box <- st_as_sfc(my_box)
   return(my_box)
   
 }
@@ -127,18 +128,53 @@ qranks <- function(var, n = 5, include_cero = T) {
 ## 4.1. Generar el mapa base ----
 gen_base_map <- function(box) {
   # a. Cargar información base
+  #norte <- png::readPNG("..\0_raw_data/4_iconos/norte.png")
   b01_rios <- readRDS("../0_raw_data/2_rds_geo_data/cuerpos_hidricos.RDS") %>%
     st_intersection(box)
   b02_parques <- readRDS("../0_raw_data/2_rds_geo_data/parques.RDS") %>%
     st_intersection(box)
   b03_manzanas <- readRDS("../0_raw_data/2_rds_geo_data/manzanas.RDS") %>%
     st_intersection(box)
+  b04_estaciones_metro <- readRDS("../0_raw_data/2_rds_geo_data/estaciones_metro.RDS") %>% 
+    st_intersection(box)
+  b05_red_metro <- readRDS("../0_raw_data/2_rds_geo_data/red_metro.RDS") %>% 
+    st_intersection(box)
+  b06_estaciones_regiotram <- readRDS("../0_raw_data/2_rds_geo_data/estaciones_regiotram.RDS") %>% 
+    st_intersection(box)
+  b07_red_regiotram <- readRDS("..\\0_raw_data/2_rds_geo_data/red_regiotram.RDS") %>% 
+    st_intersection(box)
+  
+  
   # b. crear mapa base
   my_basemap <- ggplot()+
+    # Parques, manzanas y riós
     geom_sf(data = b03_manzanas, fill = renovo_base[3], color = NA)+
     geom_sf(data = b02_parques, fill = renovo_base[2], color = NA)+
     geom_sf(data = b01_rios, fill = renovo_base[1], color = NA)+
-    map_format
+    # Redes
+    ## Regiotram
+    geom_sf(data = b06_estaciones_regiotram,size = 5, color = "white")+
+    geom_image(data = b06_estaciones_regiotram, 
+               aes(x = st_coordinates(b06_estaciones_regiotram)[,1],
+                   y = st_coordinates(b06_estaciones_regiotram)[,2],
+                   image = icon), size = 0.03)+
+    geom_sf(data = b07_red_regiotram, lty = 1,color = "#00427D",lwd = .3)+
+    geom_sf(data = b07_red_regiotram, lty = 3,color = "#00427D",lwd = 0.8)+
+    ## Metro
+    #geom_sf(data = b04_estaciones_plmb,size = 0.1, alpha = 0.001)+
+    geom_image(data = b04_estaciones_metro, 
+               aes(x = st_coordinates(b04_estaciones_metro)[,1],
+                   y = st_coordinates(b04_estaciones_metro)[,2],
+                   image = icon), size = 0.03)+
+    geom_sf(data = b05_red_metro, lty = 1,color = "#F07C16",lwd = .3)+
+    geom_sf(data = b05_red_metro, lty = 3,color = "#F07C16",lwd = 0.8)+
+    
+    
+    # Formato, norte y escala
+    map_format +
+    annotation_scale(location = "tr", width_hint = .5,
+                     style = "ticks", line_width =.5, 
+                     text_cex = .5, unit_category = "metric")
   
   return(my_basemap)
   
