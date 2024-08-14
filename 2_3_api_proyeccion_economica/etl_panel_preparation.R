@@ -5,16 +5,33 @@ source("2_3_api_proyeccion_economica/utils.R")
 
 ## 1.1 Información Castastral ----
 a0_raw <- read.csv("..\\0_raw_data/5_bases_tabulares/Lotes_final.csv")
+a0_raw_2 <- read.csv("..\\0_raw_data/5_bases_tabulares/Lotes_distancia_ver2.csv", sep = ";") %>% 
+  select(LotCodigo,starts_with("SU"),lon = X,lat = Y)
+  
+
+a0_raw_2 %>% 
+  select(!starts_with("SU")) %>% 
+  head()
+
+
+
+
 
 b0_raw_2021 <- readRDS("..\\0_raw_data/5_bases_tabulares/20230620EM2021.rds")
 
 
 # 2. Cooked base lotes ----
 a1_cooked <- a0_raw %>% 
+  # Remplazar distancias
+  select(!starts_with("SU")) %>% 
+  merge(a0_raw_2, by = "LotCodigo", all.x = T) %>% 
+  
+  
   ## 2.1. Edición de variables ----
   mutate(
-    ### 2.1.1. Formato de distancias ----
-    across(SU_Eq_Edu:SU_Tr_SITP,~as.numeric(str_replace(.,",","."))),
+    ### 2.1.1. Formato de distancias y coordenadas ----
+    across(starts_with("SU"),~as.numeric(str_replace(.,",","."))),
+    across(lon:lat,~as.numeric(str_replace(.,",","."))),
      
     ### 2.1.2. Cambio de alturas ----
     Altura_Max = as.numeric(Altura_Max),
@@ -68,15 +85,17 @@ a1_cooked <- a0_raw %>%
   
   ### 2.3.4. Independientes (hedónicas) ----
   # Equipamietnos (eq)
-  eq01_general = SU_Eq_Edu, # OJO !!! Falta Saturación por tipo
-  
+  eq01_educacion = SU_Eq_Edu1, # OJO !!! Falta Saturación por tipo
+  eq02_salud = SU_Eq_Salu1,
+  eq03_cultura = SU_Eq_Cul1,
+  eq04_recreacion = SU_Eq_Rec1,
   # Espacio público (ep)
-  ep01_parques = SU_EP_Parq, # OJO !!! falta saturar por tamaño             
-  ep02_plazas = SU_EP_Plaz,
+  ep01_parques = SU_EP_Parq1, # OJO !!! falta saturar por tamaño             
+  ep02_plazas = SU_EP_Plaz1,
   
   # Transporte (tr)
-  tr01_transmilenio = SU_Tr_TM,
-  tr02_sitp = SU_Tr_SITP,
+  tr01_transmilenio = SU_Tr_TM1,
+  tr02_sitp = SU_Tr_SITP1,
   
   # Ordenamiento (or)
   or01_tratamietno = Tratamient,
