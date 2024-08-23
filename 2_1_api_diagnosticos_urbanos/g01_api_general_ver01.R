@@ -11,8 +11,8 @@
 ## 0.1. Hiperparámetos ----
 source("2_1_api_diagnosticos_urbanos/utils.R")
 AE_dir = "../0_raw_data/3_ejemplo_api/ejemplo_api.kml"
-AE_nombre = "Proyecto X"
-folder_name = "DEMO_api"
+AE_nombre = "AE Chapinero"
+folder_name = "chapi_api"
 
 ## 0.2. Construcción de entorno ----
 ### 0.2.1. Crear folder ----
@@ -46,21 +46,24 @@ sheet_write(
 
 ## 1.1. Bases básicas ----
 ### 1.1. Areas de estudio ----
-# z0_area_estudio <- st_read("0_raw_data/1_geo_data/Actuaciones_estrategicas_12042024.shp") %>% 
-#  filter(NOMBRE == AE) %>%
-#   st_transform(crs = 4326) %>% 
-#   st_set_crs(4326)
+z0_area_estudio <- st_read("..//0_raw_data/1_geo_data/Actuaciones_estrategicas_12042024.shp") %>%
+ filter(NOMBRE == "AE Chapinero") %>%
+  st_transform(crs = 4326) %>%
+  st_set_crs(4326)
 
-z0_area_estudio <- read_sf(AE_dir) %>% 
-  st_make_valid() %>% 
-    st_transform(crs = 4326) %>%
-    st_set_crs(4326)
+# z0_area_estudio <- read_sf(AE_dir) %>% 
+#   st_make_valid() %>% 
+#     st_transform(crs = 4326) %>%
+#     st_set_crs(4326)
   
 ### 1.2. Área de análisis y mapa base ----
-z1_box <- st_as_sfc(nst_bbox(z0_area_estudio, aumento_p = .1))
+z1_box <- st_as_sf(nst_bbox(z0_area_estudio, aumento_p = .1))
+
 my_basemap <- gen_base_map(z1_box)
 p = my_basemap +
   geom_sf(data = z0_area_estudio,  aes(linetype = "Study Area"), fill = NA, lty = 2, lwd = 0.5)
+
+p
 
 ggdrive_save(
   plot = p, drive_location = folder_name,
@@ -71,25 +74,90 @@ ggdrive_save(
 # 2. Análisis automáticos
 
 ## 2.1. SISBEN
-# a0_sisben <- readRDS("../0_raw_data/2_rds_geo_data/sisben.RDS")
-# a1_sisben <- st_intersection(a0_sisben,z0_area_estudio) 
-# 
-# p = my_basemap +
-#   geom_sf(data = a1_sisben, aes(color = grupo),
-#           size = 2, alpha = .6)+
-#   ## 1.2. Target color
-#   scale_color_manual(
-#     "Grupo SISBEN",
-#     values = renovo_scale[1:4])+
-#   geom_sf(data = z0_area_estudio,  aes(linetype = "Study Area"), fill = NA, lty = 2, lwd = 0.5)+
-#   theme(legend.position = c(0.15, 0.4),
-#         legend.background = element_rect(
-#           fill = rgb(1, 1, 1, alpha = 0.8), color = NA)) 
-# 
-# ggdrive_save(
-#   plot = p, drive_location = folder_drive,
-#   name = paste0("sisben_",AE_nombre,".png"), w = 8,h = 8)
+a0_sisben <- readRDS("../0_raw_data/2_rds_geo_data/sisben.RDS")
+a1_sisben <- st_intersection(a0_sisben,z0_area_estudio)
 
+### 2.1.1. Crear mapa ----
+p = my_basemap +
+  geom_sf(data = a1_sisben, aes(color = grupo),
+          size = 2, alpha = .6)+
+  ## 1.2. Target color
+  scale_color_manual(
+    "Grupo SISBEN",
+    values = renovo_scale[1:4])+
+  geom_sf(data = z0_area_estudio,  aes(linetype = "Study Area"), fill = NA, lty = 2, lwd = 0.5)+
+  theme(legend.position = c(0.15, 0.4),
+        legend.background = element_rect(
+          fill = rgb(1, 1, 1, alpha = 0.8), color = NA))
+
+p
+
+ggdrive_save(
+  plot = p, drive_location = folder_name,
+  name = paste0("sisben_map_",AE_nombre,".png"), w = 8,h = 8)
+
+### 2.1.2. Crear gráfico ----
+my_data <- a0_sisben %>% 
+  as.data.frame() %>% 
+  select(grupo) %>% 
+  mutate(conjunto = "Ciudad") %>% 
+  rbind(
+    a1_sisben %>% 
+      as.data.frame() %>% 
+      select(grupo) %>% 
+      mutate(conjunto = "Pieza")) %>% 
+  group_by(conjunto, grupo) %>% 
+  summarise(n =n()) %>% 
+  filter(grupo != "NULL") %>% 
+  group_by(conjunto) %>% 
+  ## Clasica
+  arrange(conjunto,desc(grupo)) %>% 
+  group_by(conjunto) %>% 
+  mutate(tot = sum(n),
+         pp = n/tot,
+         position = (cumsum(pp)-pp)+(pp/2),
+         my_text = paste0(100*round(pp,2), " %")) %>% 
+  arrange(conjunto, grupo) %>% 
+  as.data.frame() 
+
+p  = my_data %>% 
+  ggplot(aes(pp,conjunto, fill = grupo))+
+  geom_bar(stat = "identity")+
+  geom_text(aes(position,conjunto, label = my_text),
+            angle = 90, color = "white", size = 3)+
+  scale_x_continuous(labels = scales::percent_format())+
+  scale_fill_manual(values = renovo_scale[1:4])+
+  theme_minimal()+
+  theme(text = element_text(family = "serif"),
+        legend.position = "bottom")+
+  labs(y = "", x = "", fill = "")
+
+ggdrive_save(
+  plot = p, drive_location = folder_name,
+  name = paste0("sisben_plot_",AE_nombre,".png"), w = 6,h = 3)
+
+
+### 2.1.3. Crear prompt ----
+
+sheet_append(
+  ss = sheet,
+  sheet = "prompts",
+  data = 
+    data.frame(
+      indicador = "SISBEN",
+      prompt = paste0(list(
+        instruccion = "Escribe un texto técnico. La primera oración del primero explicando brevemente que
+  es el SISBEN y la importancia de tomarlo en cuenta al evaluar políticas e 
+  internvenciones urbanas.En adelante segundo describe los datos, enfocado en comparar
+  la pieza con la ciudad, el centro del análisis es la pieza",
+        contexto = "Son datos de los grupos SISBEN, 
+  el número de registros según cada nivel del SISBEN",
+        nombre = paste0("la pieza a evaluar se llama ",AE_nombre),
+        rol = "Habla como persona experta en pobreza",
+        voz = "tercera persona del prural",
+        extension = "3 parrafos",
+        datos = my_data) %>% 
+          jsonlite::toJSON(pretty = F))))
 
 
 # 2. IPM ----

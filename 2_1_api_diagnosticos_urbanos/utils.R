@@ -7,6 +7,8 @@ library(stringr)
 library(patchwork)
 library(googledrive)
 library(googlesheets4)
+library(ggimage)
+library(ggspatial)
 options(scipen = 100)
 
 
@@ -65,19 +67,30 @@ nst_bbox <- function(st, aumento_p) {
   my_box = st_bbox(st)
   
   # aumentar las coordenadas en "p" porcentaje
-  x = (my_box[3]-my_box[1])*aumento_p
-  y = (my_box[4]-my_box[2])*aumento_p
+  x = (my_box[3]-my_box[1])#*aumento_p
+  y = (my_box[4]-my_box[2])#*aumento_p
+  
+  if (y >= x) {
+    y = (y+x)*aumento_p
+  } else {
+    x = (y+x)*aumento_p
+  }
   
   my_box[1] = my_box[1]-x #(x*3) # Añadido por formato integrado de renobo
   my_box[3] = my_box[3]+x
   my_box[2] = my_box[2]-y
   my_box[4] = my_box[4]+y
   
+  
   # Devlorver el marco reaumentado
   my_box <- st_as_sfc(my_box)
   return(my_box)
   
 }
+
+
+  
+
 
 ## 3.2. Ranguas cuantílicos ----
 qranks <- function(var, n = 5, include_cero = T) {
