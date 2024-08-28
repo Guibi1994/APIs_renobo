@@ -34,9 +34,8 @@ dist_saturation <- function(base, variable) {
   # Aplicar la saturación
   base <- base %>% 
     arrange({{variable}}) %>% 
-    mutate(
-      test = {{variable}},
-      !!var_name := cut({{variable}}, breaks = c(seq(0,500,50),Inf),
+    mutate( 
+      cuts := cut({{variable}}, breaks = c(seq(0,500,50),Inf),
                         labels = 
                           c(paste0(
                             var_name,"_",
@@ -44,7 +43,7 @@ dist_saturation <- function(base, variable) {
                             seq(0,500,50),"_",
                             c(seq(50,500,50),"o_mas"))))) %>% 
     mutate(dummy = 1) %>% 
-    pivot_wider(names_from = {{variable}},
+    pivot_wider(names_from = cuts,
                 values_from = dummy,
                 values_fill = 0)
   
