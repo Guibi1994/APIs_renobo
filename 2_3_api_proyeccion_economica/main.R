@@ -1,9 +1,4 @@
 
-
-
-
-
-
 # 0. Preparar entorno ----
 
 ## 0.1. Funciones y librerias generales ----
@@ -15,18 +10,43 @@ a2_tasty <- readRDS("..\\data/03_tasty/m01_tasty_lotes_enrriquecidos.RDS")
 
 
 # 1. Especificar modelos ----
+
+
+fixed_effect = a2_tasty %>% select(id04b_upl_name) %>% names()
+fixed_effect
+
 models <- data.frame(
-  tipo = c(
-    rep("pull",7),
-    rep("fixed effect",7)),
-  y = rep(names(a2_tasty)[9:15],2),
-  x = c(
-    rep(paste(names(a2_tasty)[16:ncol(a2_tasty)], collapse = "+"),7),
-    rep(paste(names(a2_tasty)[c(8,16:ncol(a2_tasty))], collapse = "+"),7))) %>% 
+  ## 1.1. Modelos de variacion de precios
+  y = a2_tasty %>% select(
+    y02a_variacion_2a:y02c_variacion_8a) %>% 
+    names()) %>% 
   mutate(
-    equation = paste0(y,"~",x),
-    modelo = row_number()) %>% 
-  select(modelo, everything())
+    x = a2_tasty %>% select(
+      in03a_uso_residencial:ncol(a2_tasty)) %>% 
+      names() %>% 
+      paste(collapse = "+"),
+    tipo = "1. Variacion de precios catastrales") %>% 
+  ## 1.2. Modelos de densidad comercial
+  rbind(
+    data.frame(
+      y = a2_tasty %>% select(ec01_den_comercio:ec03_den_industria) %>% 
+        names()) %>%
+      mutate(
+        x = a2_tasty %>% select(
+          y02a_variacion_2a:y02c_variacion_8a,
+          in03a_uso_residencial:ncol(a2_tasty)) %>% 
+          select(-ec01_den_comercio,-ec02_den_servicios, -ec03_den_industria) %>% 
+          names() %>% paste(collapse = "+"),
+        tipo = "2. Densidades comerciales CCB")) %>% 
+  ### Efectos fijos
+  mutate(
+    equation = paste0(y,"~",fixed_effect,"+",x),
+    modelo = row_number(),
+    tipo = as.factor(tipo)) %>% 
+  select(modelo,tipo, everything())
+
+
+
 
 
 
@@ -105,20 +125,20 @@ for (i in 1:nrow(models)) {
   
   
   ## 2.2.2. Resultados de UPL ----
-  for (u in 1:length(unique(a2_tasty$id04_upl))) {
+  for (u in 1:length(unique(a2_tasty$id04b_upl_name))) {
     tryCatch({
       
       ### a. Coeficientes ----
       message("3. Iniciando modelo específico")
       set.seed(1994)
       base <- tidy(
-        lm(as.formula(models$equation[i]),
-           a2_tasty %>% filter(id04_upl == unique(id04_upl)[u])), 
+        lm(as.formula(str_remove(models$equation[i],paste0(fixed_effect,"+"))),
+           a2_tasty %>% filter(id04b_upl_name == unique(id04b_upl_name)[u])), 
         conf.int = T) %>% 
         select(term,estimate,std.error,p.value,conf.low,conf.high) %>% 
         mutate(
           grupo = "upl",
-          subgrupo = unique(a2_tasty$id04_upl)[u],
+          subgrupo = unique(a2_tasty$id04b_upl_name)[u],
           modelo = models$modelo[i],
           y = models$y[i], 
           tipo = models$tipo[i])
@@ -130,13 +150,13 @@ for (i in 1:nrow(models)) {
       message("4. Iniciando analisis de ajuste")
       set.seed(1994)
       test_model <- lm(
-        as.formula(models$equation[i]),
-        a2_tasty %>% filter(id04_upl == unique(id04_upl)[u]))
+        as.formula(str_remove(models$equation[i],paste0(fixed_effect,"+"))),
+        a2_tasty %>% filter(id04b_upl_name == unique(id04b_upl_name)[u]))
       
       base <- data.frame(
         # Identificación
         grupo = "upl",
-        subgrupo = unique(a2_tasty$id04_upl)[u],
+        subgrupo = unique(a2_tasty$id04b_upl_name)[u],
         modelo = models$modelo[i],
         y = models$y[i], 
         tipo = models$tipo[i],
@@ -161,7 +181,12 @@ for (i in 1:nrow(models)) {
 
 
 
- # 3. Panel wide ----
+
+
+
+
+
+# 3. Panel wide ----
 
 r03_wide_panel <- 
   r02_adjustment %>% 
@@ -174,18 +199,18 @@ r03_wide_panel <-
   rename_with(.cols = 2:ncol(.[]),~paste0("r2a_",.)) %>% 
   
   merge(
-  r01_effects %>% 
-  filter(grupo == "upl",
-    modelo == 14) %>% 
-  filter(
-    str_detect(term, "^(eq|^ep|^tr)")) %>%
-  mutate(estimate = ifelse(p.value >0.05,NA,estimate)) %>% 
-  select(subgrupo, term,estimate) %>% 
-  pivot_wider(id_cols = subgrupo,
-              names_from = term, 
-              values_from = estimate), 
-  # rename_with(.cols = 2:ncol(.[]),~paste0("r2a_",.)),
-  by = "subgrupo", all = T)
+    r01_effects %>% 
+      filter(grupo == "upl",
+             modelo == 14) %>% 
+      filter(
+        str_detect(term, "^(eq|^ep|^tr)")) %>%
+      mutate(estimate = ifelse(p.value >0.05,NA,estimate)) %>% 
+      select(subgrupo, term,estimate) %>% 
+      pivot_wider(id_cols = subgrupo,
+                  names_from = term, 
+                  values_from = estimate), 
+    # rename_with(.cols = 2:ncol(.[]),~paste0("r2a_",.)),
+    by = "subgrupo", all = T)
 
 
 
@@ -248,6 +273,8 @@ r02_adjustment %>%
     caption = "Fuente: RENOBO",
     x = "R2 ajustado", y = "", fill = "")
 
+r02_adjustment 
+
 
 
 ## 
@@ -296,7 +323,7 @@ r01_effects %>%
     color = "")+
   theme(legend.position = "bottom")
 
-  
+
 #### Variación de precios -----
 r01_effects %>% 
   filter(

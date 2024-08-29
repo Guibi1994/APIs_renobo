@@ -16,9 +16,11 @@ options(scipen = 20)
 
 ## 1.1. Saturación de distancias ----
 ### Crea dummies a partir de distancias 
-dist_saturation <- function(base, variable) {
+dist_saturation <- function(
+    base, variable, min =0, max =1000,interval = 50) {
   # Extraer nombre de la variable
   var_name = base %>% select({{variable}}) %>% names()
+  length = length(seq(min,max,interval))
   
   # Aplicar la saturación
   base <- base %>% 
@@ -26,13 +28,13 @@ dist_saturation <- function(base, variable) {
     mutate(temporal_id = row_number()) %>% 
     mutate( 
       #ref = {{variable}},
-      {{variable}} := cut({{variable}}, breaks = c(seq(0,500,50),Inf),
+      {{variable}} := cut({{variable}}, breaks = c(seq(min,max,interval),Inf),
                         labels = 
                           c(paste0(
-                            var_name,"_",
-                            letters[1:11],"_",
-                            seq(0,500,50),"_",
-                            c(seq(50,500,50),"o_mas"))),right = FALSE)) %>% 
+                            var_name,"_d",
+                            str_pad(1:length,width = 2,pad = "0"),"_",
+                            seq(min,max,interval),"_",
+                            c(seq((min+interval),max,interval),"o_mas"))),right = FALSE)) %>% 
     mutate(dummy = 1) %>%
     pivot_wider(
       id_cols = everything(),
@@ -46,12 +48,15 @@ dist_saturation <- function(base, variable) {
 }
 
 
+
+
+# 
 pr <- data.frame(
   y = "hola",
-  id = 1:100,
-  x = c(0,sample(0:10000,99)))
+  id = 1:1000,
+  x = c(sample(0:2000,1000)))
 
-pr <- pr %>% dist_saturation(x)
+pr <- pr %>% dist_saturation(x,interval = 25)
 
 pr <- pr %>% mutate(dummy = 1) %>%
   pivot_wider(
@@ -80,6 +85,24 @@ quantilic_filter <- function(base, variable, expansion = 1.5) {
   return(base)
 }
 
+## 1.3. Eriquetas de significancia
+
+signicance_labels <- function(tidy_results) {
+  tidy_results <- tidy_results %>% 
+    mutate(
+      effect_type = 
+        case_when(
+          (p.value <0.05 & estimate <0)==T~"1. Significativo negativo",
+          (p.value <0.05 & estimate >0)==T~"2. Significativo positivo",
+          T~"0. No significativo"),
+      stars = 
+        case_when(
+          (p.value <0.01)==T~"***",
+          (p.value <0.05)==T~"**",
+          (p.value <0.1)==T~"*",
+          T~""))
+  return(tidy_results)
+}
 
 
 
