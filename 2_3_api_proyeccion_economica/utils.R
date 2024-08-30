@@ -51,20 +51,20 @@ dist_saturation <- function(
 
 
 # 
-pr <- data.frame(
-  y = "hola",
-  id = 1:1000,
-  x = c(sample(0:2000,1000)))
+# pr <- data.frame(
+#   y = "hola",
+#   id = 1:1000,
+#   x = c(sample(0:2000,1000)))
+# 
+# pr <- pr %>% dist_saturation(x,interval = 25)
+# 
+# pr <- pr %>% mutate(dummy = 1) %>%
+#   pivot_wider(
+#     id_cols = id,
+#     names_from = x,
+#     values_from = dummy)
 
-pr <- pr %>% dist_saturation(x,interval = 25)
-
-pr <- pr %>% mutate(dummy = 1) %>%
-  pivot_wider(
-    id_cols = id,
-    names_from = x,
-    values_from = dummy)
-
-
+ 
 ## 1.2 Filtro cuantilico ----
 ### Filtra un % de la base teniendo en cuenta el valor cuantilico determinado
 ### por ambas colas (i.e. 5% elimina el 2.5% inferior y 2.5% superior)
@@ -113,16 +113,16 @@ link_diccionario <- "https://docs.google.com/spreadsheets/d/1QTTEdmje0WHwJcFuhGl
 
 
 
-1-0.5
-
-# Imposición Funcional grado 2
-b1 = 2583
-b2 = -26
-(b1*-1)/(2*b2)
-
-
-
-
+# 1-0.5
+# 
+# # Imposición Funcional grado 2
+# b1 = 2583
+# b2 = -26
+# (b1*-1)/(2*b2)
+# 
+# 
+# 
+# 
 
 
 

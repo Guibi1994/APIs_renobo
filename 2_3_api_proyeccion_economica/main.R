@@ -178,47 +178,29 @@ for (i in 1:nrow(models)) {
   
 }
 
-
-
-
-
-
-
-
-
-# 3. Panel wide ----
-
-r03_wide_panel <- 
-  r02_adjustment %>% 
-  filter(grupo == "upl", 
-         modelo >= 8) %>% 
-  select(subgrupo, y,adj.r.squared) %>% 
-  pivot_wider(id_cols = subgrupo,
-              names_from = y, 
-              values_from = adj.r.squared) %>% 
-  rename_with(.cols = 2:ncol(.[]),~paste0("r2a_",.)) %>% 
+# 3. Agregar etiquetas de coeficientes
+r01_effects <- r01_effects %>% 
+  signicance_labels()
   
+# 4. Agregar muestra efectiva
+r02_adjustment <- r02_adjustment %>% 
   merge(
-    r01_effects %>% 
-      filter(grupo == "upl",
-             modelo == 14) %>% 
-      filter(
-        str_detect(term, "^(eq|^ep|^tr)")) %>%
-      mutate(estimate = ifelse(p.value >0.05,NA,estimate)) %>% 
-      select(subgrupo, term,estimate) %>% 
-      pivot_wider(id_cols = subgrupo,
-                  names_from = term, 
-                  values_from = estimate), 
-    # rename_with(.cols = 2:ncol(.[]),~paste0("r2a_",.)),
-    by = "subgrupo", all = T)
+    (a2_tasty %>% 
+    group_by(id04a_upl, subgrupo = id04b_upl_name) %>% 
+      summarise(n =n()) %>% 
+      as.data.frame()),
+    by = "subgrupo", all.x = T) %>% 
+  mutate(
+    n = ifelse(grupo == "ciudad", nrow(a2_tasty),n),
+    muestra = df.residual/n) %>% 
+  select(id04a_upl, everything())
 
+# 4. Guardar y exportar resultados
 
+## 4.1. Almacenamiento local
 
-
-
-
-
-
+saveRDS(r01_effects, "..\\data/03_tasty/r01_regression_cofficients.RDS")
+saveRDS(r02_adjustment, "..\\data/03_tasty/r02_regression_adjustments.RDS")
 
 
 googlesheets4::write_sheet(
@@ -230,219 +212,7 @@ googlesheets4::write_sheet(
   ss = "https://docs.google.com/spreadsheets/d/1lUPDioJ_-WOtZuXLggjWiJsrAymzpBkA45sfiqTsFb0/edit?usp=sharing",
   sheet = 2)
 
-googlesheets4::write_sheet(
-  data = r03_wide_panel,
-  ss = "https://docs.google.com/spreadsheets/d/1lUPDioJ_-WOtZuXLggjWiJsrAymzpBkA45sfiqTsFb0/edit?usp=sharing",
-  sheet = 3)
-
-
-summary(test_model)
-
-# 2. Regresión a nivel área de estudio
-
-
-# 3. Regresión sobre supuestos de intervención
 
 
 
-# Rsults Plots -----
-
-
-
-
-## Ajustes de modelos
-
-r02_adjustment %>% 
-  filter(subgrupo %in% c("Bogotá", "Chapinero")) %>% 
-  mutate(
-    grupo = substr(y,1,3),
-    grupo = ifelse(grupo == "y01","Y'1: Precios", "Y'2: Variación de precios"),
-    y = str_replace_all(substr(y,5,50),"_"," ")) %>% 
-  # Plot
-  ggplot(aes(adj.r.squared,y, fill = subgrupo))+
-  geom_bar(stat = "identity", position = "dodge",alpha =.7)+
-  facet_wrap(tipo~grupo, scales = "free_y")+
-  scale_fill_manual(values = rev(renovo[1:2]))+
-  #geom_text(aes(adj.r.squared,y, label ="s"))+
-  scale_x_continuous(labels = scales::percent_format())+
-  my_theme+
-  theme(legend.position = "bottom")+
-  labs(
-    title = "Bondad de ajuste (capacidad predictiva)",
-    subtitle = "R2 ajustado por modelo",
-    caption = "Fuente: RENOBO",
-    x = "R2 ajustado", y = "", fill = "")
-
-r02_adjustment 
-
-
-
-## 
-
-
-## Coeficientes ----
-
-### Hedonicos -----
-#### Precios ----
-r01_effects %>% 
-  filter(
-    ## Grupos
-    subgrupo %in% c("Bogotá", "Chapinero"),
-    ## Modelos
-    str_detect(y,"y01"), # Modelos de precios
-    modelo >7, # Modelos de efectos fijos
-    ## Variables
-    str_detect(term,"^(eq|ep|tr)")) %>% 
-  
-  # Coeficientes
-  mutate(
-    effect_type = 
-      case_when(
-        (p.value <0.05 & estimate <0)==T~"1. Significativo negativo",
-        (p.value <0.05 & estimate >0)==T~"2. Significativo positivo",
-        T~"0. No significativo"),
-    term = paste0("Dis. ",substr(term,6,50)),
-    y = str_replace_all((substr(y,6,60)),"_"," ")) %>% 
-  # Plot
-  ggplot(aes(
-    estimate,term, color = effect_type))+
-  geom_vline(xintercept = 0,lty =2)+
-  geom_point()+
-  geom_errorbar(aes(
-    xmin = conf.low,
-    xmax = conf.high,
-    y = term), lwd = 0.1, width = 0.1)+
-  facet_wrap(subgrupo~y, nrow = 2, scales = "free_x")+
-  scale_color_manual(values = c("grey60",renovo[c(3,1)]))+
-  my_theme+
-  labs(
-    title = "Resultados PoC",
-    subtitle = "Dimensión hedónica",
-    caption = "Fuente: RENOBO",
-    x = "Efecto log(y+1)", y = "Amenity",
-    color = "")+
-  theme(legend.position = "bottom")
-
-
-#### Variación de precios -----
-r01_effects %>% 
-  filter(
-    ## Grupos
-    subgrupo %in% c("Bogotá", "Chapinero"),
-    ## Modelos
-    str_detect(y,"y02"), # Modelos de precios
-    modelo >7, # Modelos de efectos fijos
-    ## Variables
-    str_detect(term,"^(eq|ep|tr)")) %>% 
-  
-  # Coeficientes
-  mutate(
-    effect_type = 
-      case_when(
-        (p.value <0.05 & estimate <0)==T~"1. Significativo negativo",
-        (p.value <0.05 & estimate >0)==T~"2. Significativo positivo",
-        T~"0. No significativo"),
-    term = paste0("Dis. ",substr(term,6,50)),
-    y = str_replace_all((substr(y,6,60)),"_"," ")) %>% 
-  # Plot
-  ggplot(aes(
-    estimate,term, color = effect_type))+
-  geom_vline(xintercept = 0,lty =2)+
-  geom_point()+
-  geom_errorbar(aes(
-    xmin = conf.low,
-    xmax = conf.high,
-    y = term), lwd = 0.1, width = 0.1)+
-  facet_wrap(subgrupo~y, nrow = 2, scales = "free_x")+
-  scale_color_manual(values = c("grey60",renovo[c(3,1)]))+
-  my_theme+
-  labs(
-    title = "Resultados PoC",
-    subtitle = "Dimensión hedónica",
-    caption = "Fuente: RENOBO",
-    x = "Efecto std{y}", y = "Amenity",
-    color = "")+
-  theme(legend.position = "bottom")
-
-
-
-
-r01_effects %>% 
-  filter(
-    ## Grupos
-    subgrupo %in% c("Bogotá", "Chapinero"),
-    ## Modelos
-    str_detect(y,"y01"), # Modelos de precios
-    modelo >7, # Modelos de efectos fijos
-    ## Variables
-    str_detect(term,"^in")) %>% 
-  
-  # Coeficientes
-  mutate(
-    effect_type = 
-      case_when(
-        (p.value <0.05 & estimate <0)==T~"1. Significativo negativo",
-        (p.value <0.05 & estimate >0)==T~"2. Significativo positivo",
-        T~"0. No significativo"),
-    term = str_replace_all(substr(term,6,50),"_"," "),
-    y = str_replace_all((substr(y,6,60)),"_"," ")) %>% 
-  # Plot
-  ggplot(aes(
-    estimate,term, color = effect_type))+
-  geom_vline(xintercept = 0,lty =2)+
-  geom_point()+
-  geom_errorbar(aes(
-    xmin = conf.low,
-    xmax = conf.high,
-    y = term), lwd = 0.1, width = 0.1)+
-  facet_wrap(subgrupo~y, nrow = 2, scales = "free_x")+
-  scale_color_manual(values = c("grey60",renovo[c(3,1)]))+
-  my_theme+
-  labs(
-    title = "Resultados PoC",
-    subtitle = "Dimensión intrínseca",
-    caption = "Fuente: RENOBO",
-    x = "Efecto log(y+1)", y = "Amenity",
-    color = "")+
-  theme(legend.position = "bottom")
-
-
-r01_effects %>% 
-  filter(
-    ## Grupos
-    subgrupo %in% c("Bogotá", "Chapinero"),
-    ## Modelos
-    str_detect(y,"y02"), # Modelos de precios
-    modelo >7, # Modelos de efectos fijos
-    ## Variables
-    str_detect(term,"^in")) %>% 
-  
-  # Coeficientes
-  mutate(
-    effect_type = 
-      case_when(
-        (p.value <0.05 & estimate <0)==T~"1. Significativo negativo",
-        (p.value <0.05 & estimate >0)==T~"2. Significativo positivo",
-        T~"0. No significativo"),
-    term = str_replace_all(substr(term,6,50),"_"," "),
-    y = str_replace_all((substr(y,6,60)),"_"," ")) %>% 
-  # Plot
-  ggplot(aes(
-    estimate,term, color = effect_type))+
-  geom_vline(xintercept = 0,lty =2)+
-  geom_point()+
-  geom_errorbar(aes(
-    xmin = conf.low,
-    xmax = conf.high,
-    y = term), lwd = 0.1, width = 0.1)+
-  facet_wrap(subgrupo~y, nrow = 2, scales = "free_x")+
-  scale_color_manual(values = c("grey60",renovo[c(3,1)]))+
-  my_theme+
-  labs(
-    title = "Resultados PoC",
-    subtitle = "Dimensión intrínseca",
-    caption = "Fuente: RENOBO",
-    x = "Efecto std{y}", y = "Amenity",
-    color = "")+
-  theme(legend.position = "bottom")
 
