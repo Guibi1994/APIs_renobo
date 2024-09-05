@@ -90,6 +90,7 @@ a2_tasty_catastro <- a1_cooked_catastro %>%
     # Remover saturados sin sentido
     -eq05b_seguridad_cais, -eq05c_seguridad_estaciones) %>% 
   ## Saturaciones
+  ### Por distancias
   dist_saturation(eq01b_educacion_colegios) %>% 
   dist_saturation(eq01c_educacion_universidades) %>% 
   dist_saturation(eq02a_salud_general) %>% 
@@ -98,7 +99,11 @@ a2_tasty_catastro <- a1_cooked_catastro %>%
   dist_saturation(ep01a_parques_general) %>% 
   dist_saturation(ep02_plazas) %>% 
   dist_saturation(tr01_transmilenio) %>% 
-  dist_saturation(tr02_sitp)
+  dist_saturation(tr02_sitp) %>% 
+  ### Por cuantiles
+  quantile_saturation(ec01_den_comercio) %>% 
+  quantile_saturation(ec02_den_servicios) %>% 
+  quantile_saturation(ec03_den_industria)
 
 saveRDS(a2_tasty_catastro, "..\\data/03_tasty/m01_tasty_lotes_enrriquecidos.RDS")
 

@@ -27,17 +27,17 @@ models <- data.frame(
       paste(collapse = "+"),
     tipo = "1. Variacion de precios catastrales") %>% 
   ## 1.2. Modelos de densidad comercial
-  rbind(
-    data.frame(
-      y = a2_tasty %>% select(ec01_den_comercio:ec03_den_industria) %>% 
-        names()) %>%
-      mutate(
-        x = a2_tasty %>% select(
-          y02a_variacion_2a:y02c_variacion_8a,
-          in03a_uso_residencial:ncol(a2_tasty)) %>% 
-          select(-ec01_den_comercio,-ec02_den_servicios, -ec03_den_industria) %>% 
-          names() %>% paste(collapse = "+"),
-        tipo = "2. Densidades comerciales CCB")) %>% 
+  # rbind(
+  #   data.frame(
+  #     y = a2_tasty %>% select(ec01_den_comercio:ec03_den_industria) %>% 
+  #       names()) %>%
+  #     mutate(
+  #       x = a2_tasty %>% select(
+  #         y02a_variacion_2a:y02c_variacion_8a,
+  #         in03a_uso_residencial:ncol(a2_tasty)) %>% 
+  #         select(-ec01_den_comercio,-ec02_den_servicios, -ec03_den_industria) %>% 
+  #         names() %>% paste(collapse = "+"),
+  #       tipo = "2. Densidades comerciales CCB")) %>% 
   ### Efectos fijos
   mutate(
     equation = paste0(y,"~",fixed_effect,"+",x),

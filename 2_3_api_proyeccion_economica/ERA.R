@@ -124,4 +124,30 @@ a2_coefficients %>% signicance_labels() %>%
        caption = "Fuente: RENOBO")
 
 
-
+# Densidades 
+a2_coefficients %>% signicance_labels() %>% 
+  filter(as.numeric(tipo)  ==1) %>% 
+  filter(str_detect(term,"ec03")) %>%
+  mutate(term = str_extract(term,"Q(.*)")) %>%
+  
+  # PLOT
+  ggplot(aes(term,estimate, color = effect_type))+
+  geom_point()+
+  geom_path(aes(term, estimate, group =y))+
+  geom_errorbar(aes(
+    ymin = conf.low,
+    ymax = conf.high,
+    x = term), lwd = 0.1, width = 0.1) +
+  geom_hline(yintercept = 0,lty =2)+
+  scale_y_continuous(labels = scales::dollar_format())+
+  
+  #coord_flip()+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 90,hjust = 1),
+        text = element_text(family = "serif"),
+        legend.position = "bottom") + 
+  scale_color_manual(values = c("grey","red","cyan3"))+
+  facet_wrap(subgrupo~y, scales = "free_y")+
+  labs(title = "Efectos de densidades saturadas",
+       subtitle = "Establecimientos industriales", color ="",x = "", 
+       caption = "Fuente: RENOBO")
