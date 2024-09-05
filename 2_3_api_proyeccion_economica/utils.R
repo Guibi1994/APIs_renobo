@@ -15,9 +15,10 @@ options(scipen = 20)
 # 1. Funciones ----
 
 ## 1.1. Saturación de distancias ----
-### Crea dummies a partir de distancias 
+### Crea dummies a partir de distancias en metros
 dist_saturation <- function(
     base, variable, min =0, max =1000,interval = 50) {
+  message("Se asumen distancias en metros")
   # Extraer nombre de la variable
   var_name = base %>% select({{variable}}) %>% names()
   length = length(seq(min,max,interval))
@@ -47,29 +48,9 @@ dist_saturation <- function(
   
 }
 
-
-
-
-# 
-# pr <- data.frame(
-#   y = "hola",
-#   id = 1:1000,
-#   x = c(sample(0:2000,1000)))
-# 
-# pr <- pr %>% dist_saturation(x,interval = 25)
-# 
-# pr <- pr %>% mutate(dummy = 1) %>%
-#   pivot_wider(
-#     id_cols = id,
-#     names_from = x,
-#     values_from = dummy)
-
- 
 ## 1.2 Filtro cuantilico ----
 ### Filtra un % de la base teniendo en cuenta el valor cuantilico determinado
 ### por ambas colas (i.e. 5% elimina el 2.5% inferior y 2.5% superior)
-
-
 quantilic_filter <- function(base, variable, expansion = 1.5) {
   
   var = base %>% pull({{variable}})
@@ -85,8 +66,7 @@ quantilic_filter <- function(base, variable, expansion = 1.5) {
   return(base)
 }
 
-## 1.3. Eriquetas de significancia
-
+## 1.3. Etiquetas  de significancia ----
 signicance_labels <- function(tidy_results) {
   tidy_results <- tidy_results %>% 
     mutate(
@@ -104,7 +84,42 @@ signicance_labels <- function(tidy_results) {
   return(tidy_results)
 }
 
+## 1.4. Saturación cuantílica ----
+### Esta función crea una saturación cuantíica a partir de cualquier variable
+###   asumiendo que los ouliers ya fueron previamente retirados
 
+quantile_saturation <-function(base, variable, cohorts = 10) {
+  var = base %>% pull({{variable}})
+  groups = c(
+    as.numeric(
+      quantile(var, probs = c(seq(0,1,1/cohorts)), na.rm = T)[1:cohorts]),Inf)
+  
+  var_name = base %>% select({{variable}}) %>% names()
+  
+  # Aplicar la saturación
+  base <- base %>% 
+    arrange({{variable}}) %>% 
+    mutate(temporal_id = row_number()) %>% 
+    mutate( 
+      #ref = {{variable}},
+      {{variable}} := cut(
+        {{variable}},
+        breaks = groups,
+        labels = 
+          c(paste0(
+            var_name,"_Q",
+            str_pad(1:cohorts,width = 2,pad = "0"))),right = FALSE)) %>% 
+    mutate(dummy = 1) %>%
+    pivot_wider(
+      id_cols = everything(),
+      names_from = {{variable}},
+      values_from = dummy,
+      values_fill = 0) %>% 
+    select(-temporal_id)
+  
+  
+  
+}
 
 # Links
 
@@ -127,8 +142,10 @@ link_diccionario <- "https://docs.google.com/spreadsheets/d/1QTTEdmje0WHwJcFuhGl
 
 
 
-# Funciones de diseño
+# 2. Funciones de diseño ----
 
+
+## 2.1. Paletas de colores ----
 ### Paleta 1
 renovo = c("#a7e85d","#013334","#e36477","#62b7b2","#d1ce84")
 ### Paleta 2
@@ -136,6 +153,7 @@ renovo_scale = c("#006A68","#90CCCB","#d1ce84","#D89A7E","#e36477","#EC3434")
 ### Paleta 3 
 renovo_base = c("#C4DCE2","#D2DAA6", "#F1F1F1")
 
+## 2.2. Formato de gráficos ----
 my_theme <- 
   theme_minimal()+
   theme(text = element_text(family = "serif"))
