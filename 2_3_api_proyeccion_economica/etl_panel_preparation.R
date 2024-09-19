@@ -6,6 +6,7 @@ source("2_3_api_proyeccion_economica/utils.R")
 ## 1.1 Base casta ----
 a0_raw_catastro <- read.csv("..\\data/01_raw/mp01_matriz_por_lotes.csv")
 b0_raw_ccb <- read.csv("..\\data/01_raw/mc01_thesellas_1ha_ccb.csv", sep = ";")
+c0_
 z0_var_dictionary <- read_sheet(link_diccionario)
 
 

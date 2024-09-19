@@ -8,6 +8,7 @@ library(stargazer)
 library(kableExtra)
 library(caret)
 library(googlesheets4)
+library(sf)
 options(scipen = 20)
 
 
