@@ -12,7 +12,7 @@ a2_tasty <- readRDS("..\\data/03_tasty/m01_tasty_lotes_enrriquecidos.RDS")
 # 1. Especificar modelos ----
 
 
-fixed_effect = a2_tasty %>% select(id04b_upl_name) %>% names()
+fixed_effect = a2_tasty %>% select(id07b_ae_name) %>% names()
 fixed_effect
 
 models <- data.frame(
@@ -125,7 +125,7 @@ for (i in 1:nrow(models)) {
   
   
   ## 2.2.2. Resultados de UPL ----
-  for (u in 1:length(unique(a2_tasty$id04b_upl_name))) {
+  for (u in 1:length(unique(a2_tasty$id07b_ae_name))) {
     tryCatch({
       
       ### a. Coeficientes ----
@@ -133,12 +133,12 @@ for (i in 1:nrow(models)) {
       set.seed(1994)
       base <- tidy(
         lm(as.formula(str_remove(models$equation[i],paste0(fixed_effect,"+"))),
-           a2_tasty %>% filter(id04b_upl_name == unique(id04b_upl_name)[u])), 
+           a2_tasty %>% filter(id07b_ae_name == unique(id07b_ae_name)[u])), 
         conf.int = T) %>% 
         select(term,estimate,std.error,p.value,conf.low,conf.high) %>% 
         mutate(
-          grupo = "upl",
-          subgrupo = unique(a2_tasty$id04b_upl_name)[u],
+          grupo = "actuacion estratégica",
+          subgrupo = unique(a2_tasty$id07b_ae_name)[u],
           modelo = models$modelo[i],
           y = models$y[i], 
           tipo = models$tipo[i])
@@ -151,12 +151,12 @@ for (i in 1:nrow(models)) {
       set.seed(1994)
       test_model <- lm(
         as.formula(str_remove(models$equation[i],paste0(fixed_effect,"+"))),
-        a2_tasty %>% filter(id04b_upl_name == unique(id04b_upl_name)[u]))
+        a2_tasty %>% filter(id07b_ae_name == unique(id07b_ae_name)[u]))
       
       base <- data.frame(
         # Identificación
-        grupo = "upl",
-        subgrupo = unique(a2_tasty$id04b_upl_name)[u],
+        grupo = "actuacion estratégica",
+        subgrupo = unique(a2_tasty$id07b_ae_name)[u],
         modelo = models$modelo[i],
         y = models$y[i], 
         tipo = models$tipo[i],
@@ -186,14 +186,14 @@ r01_effects <- r01_effects %>%
 r02_adjustment <- r02_adjustment %>% 
   merge(
     (a2_tasty %>% 
-    group_by(id04a_upl, subgrupo = id04b_upl_name) %>% 
+    group_by(id07a_ae, subgrupo = id07b_ae_name) %>% 
       summarise(n =n()) %>% 
       as.data.frame()),
     by = "subgrupo", all.x = T) %>% 
   mutate(
     n = ifelse(grupo == "ciudad", nrow(a2_tasty),n),
     muestra = df.residual/n) %>% 
-  select(id04a_upl, everything())
+  select(id07a_ae, everything())
 
 # 4. Guardar y exportar resultados
 

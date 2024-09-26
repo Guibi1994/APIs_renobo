@@ -8,6 +8,7 @@ library(stargazer)
 library(kableExtra)
 library(caret)
 library(googlesheets4)
+library(googledrive)
 library(sf)
 options(scipen = 20)
 
@@ -122,6 +123,21 @@ quantile_saturation <-function(base, variable, cohorts = 10) {
   
 }
 
+## 1.5. Conversión integral a número ----
+### Esta función detecta si un valor es un número oculto en un string y lo
+###   transforma devuelta a número
+
+convert_comma_numbers <- function(value) {
+  value = ifelse(value == "",NA,value)
+  value = ifelse(
+    str_detect(value, "\\,") ==T &
+      str_detect(value, "\\d") ==T &
+      str_detect(value, "[A-Za-z]") ==F, 
+    as.numeric(str_replace(value, ",",".")),value)
+  
+  return(value)
+}
+
 # Links
 
 ## Diccionario de datos
@@ -159,8 +175,37 @@ my_theme <-
   theme_minimal()+
   theme(text = element_text(family = "serif"))
 
+## 2.3. Orden de variables saturadas
+orden_saturaciones = c("Otra cosa", "0-50","50-100","100-150","150-200","200-250","250-300","300-350",
+  "350-400","400-450","450-500","500-550","550-600","600-650","650-700",
+  "700-750", "750-800", "800-850", "850-900","900-950", "950-1000", 
+  "1000 o más","Q01", "Q02", "Q03", "Q04","Q05", "Q06", "Q07","Q08",
+  "Q09","Q10")
 
 
+# 3. Funciones de administración ----
+
+## 3.1. Guardar en Drive ----
+ggdrive_save <- function(
+    plot,
+    drive_path,
+    name,w =5,h=5) {
+  # Description: This funtion exports an image to drive
+  
+  # a. Local saving
+  ggplot2::ggsave(
+    plot = plot,
+    filename = name,
+    width = w,
+    height = h)
+  # b. Drive saving
+  googledrive::drive_upload(
+    media = name,
+    path = drive_path,
+    overwrite = T)
+  # c. Removign local file
+  file.remove(name)
+}
 
 
 
