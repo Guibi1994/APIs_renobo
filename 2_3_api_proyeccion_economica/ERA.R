@@ -1,8 +1,14 @@
 source("2_3_api_proyeccion_economica/utils.R")  
 
 
+
+
+
 # 0. Preparar entorno ----
 ## 0.1. Cargar datos ----
+z0_dictionary <- read_sheet(ss = link_diccionario) %>%
+  select(variable_name, variable = variable_label)
+
 a1_coefficients <- readRDS("..\\data/03_tasty/r01_regression_cofficients.RDS") %>% 
   mutate(
     # Crear grupos de regresores
@@ -13,20 +19,21 @@ a1_coefficients <- readRDS("..\\data/03_tasty/r01_regression_cofficients.RDS") %
         str_detect(term,"d\\d{2}")==T~"distance",
         T~"regular"),
     # Depurar nombres de X's
+    variable_name = str_remove_all(term,"_d\\d+(.*)|_Q\\d+(.*)")) %>% 
+  merge(z0_dictionary, by ="variable_name", all.x = T) %>% 
+  mutate(
+    variable = ifelse(is.na(variable), term, variable),
     variable = case_when(
-      result_type=="distance"~paste0(
-        "Distancia a (",str_extract(term,"^\\D{2}"),"): ",(str_remove(term, "_d\\d{2}(.*)") %>% 
-        str_remove(.,"(.*)_") %>% tools::toTitleCase())),
-      result_type =="density"~paste0("Densidad (n/km2) de: ",(str_remove(term, "_Q\\d{2}(.*)") %>% 
-        str_remove(.,"(.*)_") %>% tools::toTitleCase())),
-      T~str_extract(term,"_(.*)") %>% 
-        str_remove(.,"^_") %>% tools::toTitleCase() %>% 
-        str_replace_all(.,"_"," ")),
+    result_type == "density"~paste0("Densidad de: ",variable),
+    result_type == "distance"~paste0("distancia a: ",variable),
+    T~variable)) %>% 
+    
     # Depurar nombres de Y's
+  mutate(
     y_label = case_when(
-      y == "y02a_variacion_2a"~"Variación últimos 2 años", 
-      y == "y02b_variacion_5a"~"Variación últimos 5 años",
-      y == "y02c_variacion_8a"~"Variación últimos 8 años",
+      y == "y02a_variacion_2a"~"Panel A\nVariación últimos 2 años\n(2021-2023)", 
+      y == "y02b_variacion_5a"~"Panel B\nVariación últimos 5 años\n(2018-2023)",
+      y == "y02c_variacion_8a"~"Panel C\nVariación últimos 8 años\n(2015-2023)",
       T~"Otra cosa"),
     # Extraer etiquetas (x'saturadas)
     x_label  = case_when(
@@ -44,9 +51,9 @@ a1_coefficients <- readRDS("..\\data/03_tasty/r01_regression_cofficients.RDS") %
 
 b1_adjustmetns <- readRDS("..\\data/03_tasty/r02_regression_adjustments.RDS") %>% 
   mutate(y_label = case_when(
-    y == "y02a_variacion_2a"~"Variación últimos 2 años", 
-    y == "y02b_variacion_5a"~"Variación últimos 5 años",
-    y == "y02c_variacion_8a"~"Variación últimos 8 años",
+    y == "y02a_variacion_2a"~"Panel A\nVariación últimos 2 años\n(2021-2023)", 
+    y == "y02b_variacion_5a"~"Panel B\nVariación últimos 5 años\n(2018-2023)",
+    y == "y02c_variacion_8a"~"Panel C\nVariación últimos 8 años\n(2015-2023)",
     T~"Otra cosa"))
 
 
@@ -75,8 +82,8 @@ for (i in 1:length(grupos)) {
   # 1. Crear espacios en Drive ----
   ## 1.1. Crear carpeta del grupo ----
   message("   1. Crear carpeta del AE")
-  drive_mkdir(grupos[i],path = id_results,overwrite = T)
-  id_group <- drive_get(grupos[i])
+  id = drive_mkdir(grupos[i],path = id_results,overwrite = T)
+  id_group <- drive_get(id$id)
   
   ## 1.2. Crear subcarpetas del grupo ----
   message("   2. Crear subcarpetas del AE")
@@ -181,16 +188,15 @@ for (i in 1:length(grupos)) {
       # PLOT
       ggplot(aes(x_label,estimate, color = effect_type))+
       geom_point()+
-      geom_path(aes(x_label, estimate, group =y))+
+      geom_line(aes(x_label, estimate, group =y))+
       geom_errorbar(aes(
         ymin = conf.low,
         ymax = conf.high,
         x = x_label), lwd = 0.1, width = 0.1) +
       geom_hline(yintercept = 0,lty =2)+
       scale_y_continuous(labels = scales::dollar_format())+
-      theme_minimal()+
+      my_theme+
       theme(axis.text.x = element_text(angle = 90,hjust = 1),
-            text = element_text(family = "serif"),
             legend.position = "bottom") + 
       scale_color_manual(values = c("grey","red","cyan3"))+
       facet_wrap(subgrupo~y_label, scales = "free_y")+

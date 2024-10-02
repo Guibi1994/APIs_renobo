@@ -173,7 +173,12 @@ renovo_base = c("#C4DCE2","#D2DAA6", "#F1F1F1")
 ## 2.2. Formato de gráficos ----
 my_theme <- 
   theme_minimal()+
-  theme(text = element_text(family = "serif"))
+  theme(text = element_text(family = "sans"),
+        plot.title = element_text(color = "#013334",hjust = .5),
+        plot.subtitle = element_text(color = "#013334",hjust = .5),
+        strip.text = element_text(color = "#013334", face = "bold"),
+        axis.title.x = element_text(color = "#013334", face = "bold"),
+        axis.title.y = element_text(color = "#013334", face = "bold"))
 
 ## 2.3. Orden de variables saturadas
 orden_saturaciones = c("Otra cosa", "0-50","50-100","100-150","150-200","200-250","250-300","300-350",
@@ -206,6 +211,9 @@ ggdrive_save <- function(
   # c. Removign local file
   file.remove(name)
 }
+
+
+
 
 
 

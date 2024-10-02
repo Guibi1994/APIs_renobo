@@ -10,9 +10,9 @@
 # 0. Preparar entorno ----
 ## 0.1. Hiperparámetos ----
 source("2_1_api_diagnosticos_urbanos/utils.R")
-AE_dir = "../0_raw_data/3_ejemplo_api/ejemplo_api.kml"
-AE_nombre = "AE Chapinero"
-folder_name = "chapi_api"
+AE_dir = "../data/00_geo_data/3_ejemplo_api/ejemplo_api.kml"
+AE_nombre = "AE Pieza Reencuentro"
+folder_name = "Reencuentro_api"
 
 ## 0.2. Construcción de entorno ----
 ### 0.2.1. Crear folder ----
@@ -46,8 +46,8 @@ sheet_write(
 
 ## 1.1. Bases básicas ----
 ### 1.1. Areas de estudio ----
-z0_area_estudio <- st_read("..//0_raw_data/1_geo_data/Actuaciones_estrategicas_12042024.shp") %>%
- filter(NOMBRE == "AE Chapinero") %>%
+z0_area_estudio <- st_read("..//data/00_geo_data/1_raw_geo_data/Actuaciones_estrategicas_12042024.shp") %>%
+ filter(NOMBRE == "AE Pieza Reencuentro") %>%
   st_transform(crs = 4326) %>%
   st_set_crs(4326)
 
@@ -74,7 +74,7 @@ ggdrive_save(
 # 2. Análisis automáticos
 
 ## 2.1. SISBEN
-a0_sisben <- readRDS("../0_raw_data/2_rds_geo_data/sisben.RDS")
+a0_sisben <- readRDS("../data/00_geo_data/2_rds_geo_data/sisben.RDS")
 a1_sisben <- st_intersection(a0_sisben,z0_area_estudio)
 
 ### 2.1.1. Crear mapa ----
@@ -163,7 +163,7 @@ sheet_append(
 # 2. IPM ----
 
 ## 2.1. Cargar información ----
-a2_ipm <- readRDS("../0_raw_data/2_rds_geo_data/IPM_bogota_DANE2018.RDS") %>% 
+a2_ipm <- readRDS("../data/00_geo_data/2_rds_geo_data/IPM_bogota_DANE2018.RDS") %>% 
   mutate(
     study_area = lengths(
       st_intersects(st_centroid(.[]), z0_area_estudio)) > 0,
@@ -247,7 +247,7 @@ sheet_append(
 # 3. Estratos ----
 
 ## 3.1. Crear mapa ----
-a0_stratum <- readRDS("../0_raw_data/2_rds_geo_data/estratos.RDS")%>% 
+a0_stratum <- readRDS("../data/00_geo_data/2_rds_geo_data/estratos.RDS")%>% 
   mutate(
     study_area = lengths(
       st_intersects(st_centroid(.[]), z0_area_estudio)) > 0,

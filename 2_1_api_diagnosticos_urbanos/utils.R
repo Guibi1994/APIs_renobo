@@ -136,25 +136,28 @@ qranks <- function(var, n = 5, include_cero = T) {
 }
 
 
+
 # 4. Funciones cartográficas ----
 
 ## 4.1. Generar el mapa base ----
 gen_base_map <- function(box) {
   # a. Cargar información base
   #norte <- png::readPNG("..\0_raw_data/4_iconos/norte.png")
-  b01_rios <- readRDS("../0_raw_data/2_rds_geo_data/cuerpos_hidricos.RDS") %>%
+  b01_rios <- readRDS("../data/00_geo_data/2_rds_geo_data/cuerpos_hidricos.RDS") %>%
     st_intersection(box)
-  b02_parques <- readRDS("../0_raw_data/2_rds_geo_data/parques.RDS") %>%
+  b02_parques <- readRDS("../data/00_geo_data/2_rds_geo_data/parques.RDS") %>%
+    st_intersection(box) 
+  b03_manzanas <- readRDS("../data/00_geo_data/2_rds_geo_data/manzanas.RDS") %>%
     st_intersection(box)
-  b03_manzanas <- readRDS("../0_raw_data/2_rds_geo_data/manzanas.RDS") %>%
+  b04_estaciones_metro <- readRDS("../data/00_geo_data/2_rds_geo_data/estaciones_metro.RDS") %>% 
+    st_intersection(box) %>% 
+    mutate(icon = "../data/00_geo_data/3_iconos/metro_bogota.PNG")
+  b05_red_metro <- readRDS("../data/00_geo_data/2_rds_geo_data/red_metro.RDS") %>% 
     st_intersection(box)
-  b04_estaciones_metro <- readRDS("../0_raw_data/2_rds_geo_data/estaciones_metro.RDS") %>% 
-    st_intersection(box)
-  b05_red_metro <- readRDS("../0_raw_data/2_rds_geo_data/red_metro.RDS") %>% 
-    st_intersection(box)
-  b06_estaciones_regiotram <- readRDS("../0_raw_data/2_rds_geo_data/estaciones_regiotram.RDS") %>% 
-    st_intersection(box)
-  b07_red_regiotram <- readRDS("..\\0_raw_data/2_rds_geo_data/red_regiotram.RDS") %>% 
+  b06_estaciones_regiotram <- readRDS("../data/00_geo_data/2_rds_geo_data/estaciones_regiotram.RDS") %>% 
+    st_intersection(box) %>% 
+    mutate(icon = "../data/00_geo_data/3_iconos/regio_tram.png")
+  b07_red_regiotram <- readRDS("../data/00_geo_data/2_rds_geo_data/red_regiotram.RDS") %>% 
     st_intersection(box)
   
   
