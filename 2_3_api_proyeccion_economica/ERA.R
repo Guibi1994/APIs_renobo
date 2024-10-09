@@ -25,7 +25,7 @@ a1_coefficients <- readRDS("..\\data/03_tasty/r01_regression_cofficients.RDS") %
     variable = ifelse(is.na(variable), term, variable),
     variable = case_when(
     result_type == "density"~paste0("Densidad de: ",variable),
-    result_type == "distance"~paste0("distancia a: ",variable),
+    result_type == "distance"~paste0("Distancia a: ",variable),
     T~variable)) %>% 
     
     # Depurar nombres de Y's
@@ -46,7 +46,10 @@ a1_coefficients <- readRDS("..\\data/03_tasty/r01_regression_cofficients.RDS") %
       T~"Otra cosa"),
     x_label = factor(
       x_label,
-      levels  = orden_saturaciones))
+      levels  = orden_saturaciones),
+    subgrupo = factor(
+      subgrupo,
+      levels = orden_ae))
 
 
 b1_adjustmetns <- readRDS("..\\data/03_tasty/r02_regression_adjustments.RDS") %>% 
@@ -70,7 +73,8 @@ id_results <- drive_get(results_folder)
 
 ## 0.3. Determinar grupos de análisis ----
 grupos <- unique(a1_coefficients$subgrupo)[3:length(
-  unique(a1_coefficients$subgrupo))]
+  unique(a1_coefficients$subgrupo))] %>% 
+  as.character()
 
 1:length(grupos)
 
@@ -124,11 +128,11 @@ for (i in 1:length(grupos)) {
     geom_bar(stat = "identity",alpha = .8)+
     coord_cartesian(xlim = c(0,1))+
     facet_wrap(.~y_label,scales = "free_x",
-               nrow = 2)+
+               nrow = 1)+
     scale_fill_manual(values = c(renovo[1:2]))+
     my_theme+
     theme(legend.position = "bottom")+
-    labs(title = "Calidad del modelo",
+    labs(title = "Calidad del modelo",fill = "", color = "",
          subtitle = "R2 ajustado", x = "R2 ajustado", y = "")
   
   message("   - Iniciando exportación a Drive")
@@ -168,7 +172,7 @@ for (i in 1:length(grupos)) {
   message("   - Iniciando exportación a Drive")
   ggdrive_save(
     plot = p,drive_path  = id_regesiones, name = "1. Dimensión Intrínseca-General.png",
-    w = 8,h = 8)
+    w = 10, h = 8)
   message("   - Exportación a Exitosa")
   # 5. Gráficos de Coeficientes saturados ----
   
@@ -201,8 +205,11 @@ for (i in 1:length(grupos)) {
       scale_color_manual(values = c("grey","red","cyan3"))+
       facet_wrap(subgrupo~y_label, scales = "free_y")+
       labs(title = paste0("Efectos de la ",saturaciones[u]),
-           subtitle = grupos[1],
-           color ="",x = "", y = "",
+           subtitle = grupos[i],
+           color ="",
+           x = ifelse(str_detect(saturaciones[u],"Densidad"),
+                      "Deciles de densidad","Distancia (mts)"),
+           y = "Variación de precio (COP)",
            caption = "Fuente: RENOBO")
     
     message("   - Iniciando exportación a Drive")
@@ -217,7 +224,7 @@ for (i in 1:length(grupos)) {
 }
   
  
-
+str_view(paste(unique(paste0('"',a1_coefficients$subgrupo,'"')), collapse = ", "),html = T)
 
 
 

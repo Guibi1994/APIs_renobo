@@ -187,6 +187,15 @@ orden_saturaciones = c("Otra cosa", "0-50","50-100","100-150","150-200","200-250
   "1000 o más","Q01", "Q02", "Q03", "Q04","Q05", "Q06", "Q07","Q08",
   "Q09","Q10")
 
+## 2.4. Orden de grupos de ciudad
+orden_ae = c(
+  "Bogotá", "AE Pieza RioNegro", "Distrito Aeroportuario-Engativá", "Nodo Toberin",
+  "AE Polo Cultural", "Montevideo", "Sevillana", "AE Fucha Metro", "Eje Tintal", 
+  "Porvenir", "AE Eje Puente Aranda", "20 de Julio", "AE Chapinero", 
+  "Distrito Aeroportuario-Fontibón", "Resto de la ciudad", "Chucua La Vaca",
+  "AE Campin 7 de Agosto", "AE Pieza Reencuentro", "AE Calle 72",
+  "Ciudadela educativa y del cuidado", "AE Zona Industrial", "Ferias")
+
 
 # 3. Funciones de administración ----
 
