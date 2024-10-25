@@ -4,12 +4,13 @@ library(tidyr)
 library(ggplot2)
 library(sf)
 library(stringr)
-library(patchwork)
 library(googledrive)
 library(googlesheets4)
 library(ggimage)
 library(ggspatial)
 options(scipen = 100)
+
+
 
 
 # 1. Catalaogo de datos espaciales (local) ----

@@ -72,9 +72,10 @@ id_results <- drive_get(results_folder)
 
 
 ## 0.3. Determinar grupos de análisis ----
-grupos <- unique(a1_coefficients$subgrupo)[3:length(
+grupos <- unique(a1_coefficients$subgrupo)[2:length(
   unique(a1_coefficients$subgrupo))] %>% 
   as.character()
+
 
 1:length(grupos)
 
