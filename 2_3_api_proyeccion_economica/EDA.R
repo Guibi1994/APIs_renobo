@@ -13,7 +13,7 @@ a1_cooked <- readRDS("..\\data/02_cooked/m01_cooked_lotes_enrriquecidos.RDS")
 ### 1.1.1. Y1: Precios ----
 a1_cooked %>% 
   sample_n(200) %>% 
-  select(id01_lote, y01a_valor_2015:y01d_valor_2023) %>% 
+  select(id01a_lote, y01a_valor_2015:y01d_valor_2023) %>% 
   pivot_longer(cols = y01a_valor_2015:y01d_valor_2023) %>% 
   mutate(name = str_extract(name, "v(.*)") %>% 
            str_replace_all(.,"\\_"," ")) %>% 
@@ -27,14 +27,14 @@ a1_cooked %>%
   my_theme +
   labs(
     title = "Precios por m2",
-    subtitle = "Bogotá 2015-20123",
+    subtitle = "Bogotá 2015-2023",
     caption = "Fuente: RENOBO",
     x = "Precios por m2 (COP)", y = "Año")
 
 ### 1.1.2. Y2: Variación de precios ----
 a1_cooked %>%
   #sample_n(100) %>% 
-  select(id01_lote,y02a_variacion_2a:y02c_variacion_8a) %>% 
+  select(id01a_lote,y02a_variacion_2a:y02c_variacion_8a) %>% 
   pivot_longer(cols = y02a_variacion_2a:y02c_variacion_8a,
                names_to = "variable") %>% 
   mutate(variable = case_when(
@@ -46,7 +46,7 @@ a1_cooked %>%
   geom_histogram(aes(fill = variable),alpha =.6)+
   geom_vline(
     xintercept = (a1_cooked %>% 
-                    select(id01_lote,y02a_variacion_2a:y02c_variacion_8a) %>% 
+                    select(id01a_lote,y02a_variacion_2a:y02c_variacion_8a) %>% 
                     pivot_longer(cols = y02a_variacion_2a:y02c_variacion_8a, names_to = "variable") %>% 
                     group_by(variable) %>% 
                     summarise(value = mean(value, na.rm = T)) %>% 
@@ -59,7 +59,7 @@ a1_cooked %>%
   my_theme+
   labs(
     title = "Variaciones de precios",
-    subtitle = "Bogotá 2015-20123",
+    subtitle = "Bogotá 2015-2023",
     caption = "Fuente: RENOBO",
     x = "Variación (COP)", y = "", fill = "Y2': Variaciones")
 
