@@ -12,6 +12,9 @@ options(scipen = 100)
 
 
 
+# 0. keys
+ai_key = readLines("..\\keys/open_ai.txt")
+
 
 # 1. Catalaogo de datos espaciales (local) ----
 gdb_path <- "F:\\1. Datos Generales/2. Datos Base.gdb/"
@@ -219,6 +222,11 @@ ggdrive_save <- function(
   # c. Removign local file
   file.remove(name)
 }
+
+# 6. Llaves
+
+ai_key = readLines("..\\keys/open_ai.txt")
+
 
 
 

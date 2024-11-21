@@ -1,0 +1,32 @@
+---
+title: "Docu-Automata"
+author: "Guibor Camargo"
+date: "2024-11-19"
+output: html_document
+params:
+  study_area: "a"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 
+
+```{r}
+source("..\2_3_api_proyeccion_economica/utils.R")
+```
+
+# Introducción
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+ai_kay = readLines("..\\..\\keys/open_ai.txt")
+
+openai::create_chat_completion(
+  model = "gpt-3.5-turbo",
+  messages = list(
+    "role" = "system",
+    ""
+  )
+)
+```
